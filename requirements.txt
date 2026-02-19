@@ -2,4 +2,4 @@ fastapi==0.116.1
 uvicorn==0.35.0
 yfinance==0.2.52
 pandas==2.2.2
-https://github.com/twopirllc/pandas-ta/archive/refs/heads/main.zip
+
