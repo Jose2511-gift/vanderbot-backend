@@ -15,7 +15,7 @@ app.add_middleware(
 def calcular_estrategia():
     try:
         # Busca os dados
-        ticker = yf.Ticker("EURUSD=X")
+        ticker = yf.Ticker("BTC-USD")
         data = ticker.history(period="1d", interval="1m")
         
         if data.empty or len(data) < 15:
@@ -54,7 +54,7 @@ def analisar(estrategia: str = "z", id: str = "0"):
     print(f"ID: {id} | SINAL: {sinal} | TAXA: {taxa}")
     
     return {
-        "ativo": "EUR/USD",
+        "ativo": "BTC-USD",
         "sinal": sinal,
         "assertividade": taxa,
         "volume": "Monitorado"
@@ -64,6 +64,7 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=10000)
+
 
 
 
