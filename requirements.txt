@@ -1,11 +1,9 @@
-fastapi==0.116.1
-uvicorn==0.35.0
-yfinance==0.2.52
-pandas==2.2.2
+fastapi
+uvicorn
+yfinance
+pandas
 numpy<2.0.0
 requests
 lxml
 beautifulsoup4
 pandas-ta
-
-
