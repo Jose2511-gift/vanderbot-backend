@@ -2,8 +2,8 @@ fastapi
 uvicorn
 yfinance
 pandas
-numpy<2.0.0
+pandas-ta
+numpy
 requests
 lxml
 beautifulsoup4
-pandas-ta
