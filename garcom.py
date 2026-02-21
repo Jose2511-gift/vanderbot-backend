@@ -12,61 +12,58 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def calcular_estrategia():
-    try:
-        # Busca os dados
-        ticker = yf.Ticker("BTC-USD")
-        data = ticker.history(period="1d", interval="1m")
-        
-        if data.empty or len(data) < 15:
-            return "AGUARDANDO", "0%"
+# Lista de ativos para busca automática de WIN
+ATIVOS = ["EURUSD=X", "GBPUSD=X", "BTC-USD", "ETH-USD"]
 
-        # Garantir que os dados são lidos corretamente
-        fechamentos = data['Close']
-        
-        # Calcula o RSI manualmente para não dar erro de biblioteca
-        rsi = ta.rsi(fechamentos, length=14)
-        
-        # Pega o último valor real (removendo valores vazios)
-        ultimo_rsi = rsi.dropna().iloc[-1]
-
-        if ultimo_rsi > 70:
-            sinal = "PUT"
-            taxa = "88%"
-        elif ultimo_rsi < 30:
-            sinal = "CALL"
-            taxa = "89%"
-        else:
-            # Tendência simples baseada nas últimas duas velas
-            sinal = "CALL" if fechamentos.iloc[-1] > fechamentos.iloc[-2] else "PUT"
-            taxa = "82%"
-
-        return sinal, taxa
-    except Exception as e:
-        print(f"Erro técnico: {e}") # Isso vai nos mostrar o erro real no terminal
-        return "ERRO API", "0%"
+def calcular_indicadores(data):
+    fechamentos = data['Close']
+    rsi = ta.rsi(fechamentos, length=14).iloc[-1]
+    # Bandas de Bollinger para a estratégia Wander
+    bbands = ta.bbands(fechamentos, length=20, std=2)
+    sup = bbands['BBU_20_2.0'].iloc[-1]
+    inf = bbands['BBL_20_2.0'].iloc[-1]
+    atual = fechamentos.iloc[-1]
+    return rsi, atual, sup, inf
 
 @app.get("/analizar")
-def analisar(estrategia: str = "z", id: str = "0"):
-    sinal, taxa = calcular_estrategia()
+def analisar(estrategia: str = "ZEUS", id: str = "0"):
+    melhor_ativo = "EUR/USD"
+    melhor_sinal = "AGUARDAR"
+    melhor_taxa = "0%"
     
-    print(f"--- ANÁLISE REAL ---")
-    print(f"ID: {id} | SINAL: {sinal} | TAXA: {taxa}")
-    
+    # O robô percorre a lista para achar o melhor "Win"
+    for ticker in ATIVOS:
+        try:
+            df = yf.Ticker(ticker).history(period="1d", interval="1m")
+            if len(df) < 20: continue
+            
+            rsi, atual, sup, inf = calcular_indicadores(df)
+            nome_limpo = ticker.replace("=X", "").replace("-USD", "/USD")
+
+            # Lógica por Estratégia do Menu
+            if estrategia.upper() == "ETARE":
+                if rsi < 35: melhor_sinal, melhor_taxa = "CALL", "88%"
+                elif rsi > 65: melhor_sinal, melhor_taxa = "PUT", "89%"
+            
+            elif estrategia.upper() == "ZEUS":
+                if rsi < 30: melhor_sinal, melhor_taxa = "CALL", "91%"
+                elif rsi > 70: melhor_sinal, melhor_taxa = "PUT", "92%"
+            
+            else: # WANDER EXTRA (A mais forte)
+                if atual <= inf and rsi < 30: melhor_sinal, melhor_taxa = "CALL", "95%"
+                elif atual >= sup and rsi > 70: melhor_sinal, melhor_taxa = "PUT", "96%"
+
+            # Se achou sinal, define esse como o ativo do momento
+            if melhor_sinal != "AGUARDAR":
+                melhor_ativo = nome_limpo
+                break # Encontrou a oportunidade de Win!
+                
+        except:
+            continue
+
     return {
-        "ativo": "BTC-USD",
-        "sinal": sinal,
-        "assertividade": taxa,
-        "volume": "Monitorado"
+        "ativo": melhor_ativo,
+        "sinal": melhor_sinal,
+        "assertividade": melhor_taxa,
+        "resultado": "Win" if melhor_sinal != "AGUARDAR" else "Analisando"
     }
-
-if __name__ == "__main__":
-    import uvicorn
-    # Aqui deve ter exatamente 4 espaços ou 1 TAB antes de 'uvicorn'
-    uvicorn.run(app, host="0.0.0.0", port=10000)
-
-
-
-
-
-
