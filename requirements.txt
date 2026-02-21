@@ -7,4 +7,3 @@ requests
 lxml
 beautifulsoup4
 pandas-ta
-pandas_ta
