@@ -6,4 +6,5 @@ numpy<2.0.0
 requests
 lxml
 beautifulsoup4
-https://github.com/twopirllc/pandas-ta/archive/refs/heads/main.zip
+
+
