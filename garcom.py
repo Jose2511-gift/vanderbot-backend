@@ -12,11 +12,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Lista de Elite com 12 ativos para garantir o WIN
+# Reduzi para os 6 mais fortes para o servidor não dar erro de tempo
 ATIVOS = [
-    "EURUSD=X", "GBPUSD=X", "USDJPY=X", "AUDUSD=X", 
-    "EURJPY=X", "USDCAD=X", "GBPJPY=X", 
-    "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD", "XRP-USD"
+    "EURUSD=X", "GBPUSD=X", "USDJPY=X", 
+    "BTC-USD", "ETH-USD", "SOL-USD"
 ]
 
 def calcular_indicadores(data):
@@ -75,3 +74,4 @@ def analisar(estrategia: str = "ZEUS", id: str = "0"):
         "assertividade": melhor_taxa,
         "resultado": "Win" if melhor_sinal != "AGUARDAR" else "Analisando"
     }
+
