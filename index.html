@@ -3,28 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanderbot Premium</title>
+    <title>VANDERBOT PREMIUM</title>
     <style>
-        body { background-color: #0d1117; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .card { border: 1px solid #30363d; border-radius: 10px; padding: 20px; background: #161b22; }
-        button { background-color: #238636; color: white; border: none; padding: 15px 30px; border-radius: 5px; font-weight: bold; width: 100%; cursor: pointer; }
-        select { width: 100%; padding: 10px; margin-bottom: 20px; background: #0d1117; color: white; }
-        #resultado { margin-top: 20px; font-size: 1.2em; }
-        .win { color: #2ea043; font-weight: bold; }
+        body { background-color: #0b0e14; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; }
+        .logo-container { margin-bottom: 20px; }
+        .logo-img { width: 150px; height: auto; margin-bottom: 10px; }
+        h1 { font-size: 1.5rem; letter-spacing: 1px; margin-bottom: 30px; }
+        .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 25px; max-width: 350px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        label { display: block; margin-bottom: 8px; color: #8b949e; font-size: 0.9rem; }
+        select, input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 6px; border: 1px solid #30363d; background-color: #0d1117; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; border-radius: 6px; border: none; background-color: #238636; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        button:hover { background-color: #2ea043; }
+        #resultado { margin-top: 25px; padding-top: 15px; border-top: 1px solid #30363d; }
+        .win { color: #2ea043; font-weight: bold; font-size: 1.3rem; }
     </style>
 </head>
 <body>
-    <img src="https://i.imgur.com/8a135b.png" width="150" alt="Logo">
-    <h2>VANDERBOT PREMIUM</h2>
+
+    <div class="logo-container">
+        <img src="https://i.imgur.com/8a135b.png" alt="VANDERBOT PREMIUM" class="logo-img">
+        <h1>VANDERBOT PREMIUM</h1>
+    </div>
+
     <div class="card">
         <label>Selecione a estratégia</label>
         <select id="est">
-            <option value="ETARE">ETARE</option>
-            <option value="ZEUS">ZEUS OTC</option>
             <option value="WANDER">EXTRA WANDER</option>
+            <option value="ZEUS">ZEUS OTC</option>
+            <option value="ETARE">ETARE</option>
         </select>
+
         <button onclick="analisar()">ANALISAR MERCADO</button>
-        <div id="resultado">Clique para analisar...</div>
+
+        <div style="margin-top: 20px;">
+            <label>ID da corretora:</label>
+            <input type="text" placeholder="Seu ID">
+        </div>
+
+        <div id="resultado">
+            <p style="color: #8b949e;">Aguardando análise...</p>
+        </div>
     </div>
 
     <script>
@@ -34,19 +52,20 @@
             const est = document.getElementById('est').value;
             
             btn.innerText = "ANALISANDO...";
-            resDiv.innerHTML = "Buscando melhor ativo...";
+            resDiv.innerHTML = "<p>Buscando melhor oportunidade...</p>";
 
             try {
+                // Conecta com o seu servidor no Render
                 const response = await fetch(`https://vanderbot-backend.onrender.com/analizar?estrategia=${est}`);
                 const data = await response.json();
                 
                 resDiv.innerHTML = `
-                    <h3>${data.ativo}</h3>
-                    <p>Sinal: <strong>${data.sinal}</strong></p>
-                    <p>Resultado: <span class="win">${data.resultado}</span></p>
+                    <h3 style="margin: 5px 0;">${data.ativo}</h3>
+                    <p style="margin: 5px 0;">Sinal: <strong>${data.sinal}</strong></p>
+                    <p style="margin: 5px 0;">Resultado: <span class="win">${data.resultado}</span></p>
                 `;
             } catch (error) {
-                resDiv.innerHTML = "Erro ao conectar. Tente novamente.";
+                resDiv.innerHTML = "<p style='color: #da3633;'>Erro: Servidor offline. Tente novamente.</p>";
             }
             btn.innerText = "ANALISAR MERCADO";
         }
