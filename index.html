@@ -6,14 +6,15 @@
     <title>VANDERBOT PREMIUM</title>
     <style>
         body { background-color: #0b0e14; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .logo-img { width: 180px; margin-bottom: 20px; }
-        .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; max-width: 380px; margin: 0 auto; }
-        label { display: block; margin-bottom: 5px; color: #8b949e; font-size: 0.9rem; text-align: left; }
-        select, input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #30363d; background-color: #0d1117; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; border-radius: 6px; border: none; background-color: #009d43; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 15px; }
-        #resultado-container { margin-top: 10px; padding: 15px; border-radius: 8px; background: #0d1117; }
-        .win-text { color: #00ff6a; font-weight: bold; }
-        .ativo-nome { color: #00ff6a; font-size: 1.2rem; font-weight: bold; }
+        .logo-img { width: 200px; margin-bottom: 20px; }
+        .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; max-width: 380px; margin: 0 auto; text-align: left; }
+        .row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .col { flex: 1; }
+        label { display: block; margin-bottom: 5px; color: #8b949e; font-size: 0.8rem; }
+        select, input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #30363d; background-color: #0d1117; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; border-radius: 6px; border: none; background-color: #009d43; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; margin: 15px 0; font-size: 1rem; }
+        .status-box { background: #0d1117; padding: 15px; border-radius: 8px; text-align: center; }
+        .win-text { color: #00ff6a; font-weight: bold; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -21,12 +22,12 @@
     <img src="https://raw.githubusercontent.com/Jose2511-gift/vanderbot-backend/main/logo.png" alt="VANDERBOT PREMIUM" class="logo-img">
 
     <div class="card">
-        <div style="display: flex; gap: 10px;">
-            <div style="flex: 1;">
+        <div class="row">
+            <div class="col">
                 <label>Modo de operação:</label>
                 <select><option>Manual</option></select>
             </div>
-            <div style="flex: 1;">
+            <div class="col">
                 <label>Selecione a estratégia:</label>
                 <select id="est">
                     <option value="ZEUS">Zeus OTC</option>
@@ -37,42 +38,19 @@
         </div>
 
         <label>ID da corretora:</label>
-        <input type="text" placeholder="Seu ID" id="user-id">
+        <input type="text" placeholder="Seu ID" value="62846577">
 
         <button onclick="analisar()">ANALISAR MERCADO</button>
 
-        <div id="resultado-container">
-            <p id="status-conexao" style="color: #00ff6a; font-size: 0.8rem; margin: 0;">● Conectado</p>
-            <p style="margin: 10px 0;">Par de moedas: <span id="ativo-exibido" class="ativo-nome">--</span></p>
-            <p>Resultado: <span id="resultado-sinal" class="win-text">--</span></p>
+        <div class="status-box">
+            <p style="margin: 0; font-size: 0.8rem;"><span style="color: #00ff6a;">●</span> Conectado</p>
+            <p style="margin: 10px 0;">Par de moedas: <span id="ativo-exibido" class="win-text">AGUARDANDO...</span></p>
+            <p style="margin: 0;">Resultado: <span id="resultado-sinal">--</span></p>
         </div>
     </div>
 
     <script>
         async function analisar() {
             const btn = document.querySelector('button');
-            const ativoTexto = document.getElementById('ativo-exibido');
-            const resultadoTexto = document.getElementById('resultado-sinal');
-            const est = document.getElementById('est').value;
-            
-            btn.innerText = "ANALISANDO...";
-            ativoTexto.innerText = "Buscando...";
-            resultadoTexto.innerText = "--";
-
-            try {
-                // Chama o seu servidor no Render
-                const response = await fetch(`https://vanderbot-backend.onrender.com/analizar?estrategia=${est}`);
-                const data = await response.json();
-                
-                // Aqui a mágica acontece: ele pega o ativo que o robô escolheu!
-                ativoTexto.innerText = data.ativo; 
-                resultadoTexto.innerText = data.resultado; // Exibe o "Win" ou "Analisando"
-            } catch (error) {
-                ativoTexto.innerText = "ERRO";
-                resultadoTexto.innerText = "Servidor Offline";
-            }
-            btn.innerText = "ANALISAR MERCADO";
-        }
-    </script>
-</body>
-</html>
+            const ativoTxt = document.getElementById('ativo-exibido');
+            const resTxt =
