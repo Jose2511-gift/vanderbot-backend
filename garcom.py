@@ -12,65 +12,55 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Lista completa com os 12 ativos que você pediu (incluindo Japão e Ouro)
+# Lista de ativos focada nos mais fortes
 ATIVOS = [
-    "EURUSD=X", "GBPUSD=X", "USDJPY=X", "AUDUSD=X", "USDCAD=X", "EURJPY=X",
-    "GBPJPY=X", "GC=F", "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD"
+    "EURUSD=X", "GBPUSD=X", "USDJPY=X", "EURJPY=X", 
+    "BTC-USD", "ETH-USD", "GC=F"
 ]
 
-def calcular_indicadores(data):
+def calcular_indicadores(df):
     try:
-        fechamentos = data['Close']
-        rsi = ta.rsi(fechamentos, length=14).iloc[-1]
-        bbands = ta.bbands(fechamentos, length=20, std=2)
-        sup = bbands['BBU_20_2.0'].iloc[-1]
-        inf = bbands['BBL_20_2.0'].iloc[-1]
-        atual = fechamentos.iloc[-1]
-        return rsi, atual, sup, inf
+        rsi = ta.rsi(df['Close'], length=14).iloc[-1]
+        bb = ta.bbands(df['Close'], length=20, std=2)
+        return rsi, df['Close'].iloc[-1], bb['BBU_20_2.0'].iloc[-1], bb['BBL_20_2.0'].iloc[-1]
     except:
         return None, None, None, None
 
 @app.get("/analizar")
-def analisar(estrategia: str = "ZEUS", id: str = "0"):
-    melhor_ativo = "EUR/USD"
+def analisar(estrategia: str = "WANDER"):
+    melhor_ativo = "PROCURANDO..."
     melhor_sinal = "AGUARDAR"
     melhor_taxa = "0%"
 
-    try:
-        # BAIXA TUDO DE UMA VEZ (Isso evita o erro de 'Too Many Requests')
-        dados = yf.download(ATIVOS, period="1d", interval="1m", group_by='ticker', progress=False)
-
-        for ticker in ATIVOS:
-            df = dados[ticker].tail(30)
-            if len(df) < 20: continue
+    for ticker in ATIVOS:
+        try:
+            # Baixa o dado de cada moeda individualmente para evitar bloqueio
+            data = yf.download(ticker, period="1d", interval="1m", progress=False, timeout=10)
+            if data.empty: continue
             
-            rsi, atual, sup, inf = calcular_indicadores(df)
+            rsi, atual, sup, inf = calcular_indicadores(data)
             if rsi is None: continue
-            
-            nome_limpo = ticker.replace("=X", "").replace("-USD", "/USD").replace("GC=F", "GOLD")
 
-            # --- LÓGICA DAS 3 ESTRATÉGIAS ---
-            if estrategia.upper() == "ZEUS":
-                if rsi < 40: melhor_sinal, melhor_taxa = "CALL", "91%"
-                elif rsi > 60: melhor_sinal, melhor_taxa = "PUT", "92%"
-            
-            elif estrategia.upper() == "ETARE":
-                if rsi < 48: melhor_sinal, melhor_taxa = "CALL", "88%"
-                elif rsi > 52: melhor_sinal, melhor_taxa = "PUT", "89%"
-            
-            elif estrategia.upper() == "WANDER":
-                if atual <= inf: melhor_sinal, melhor_taxa = "CALL", "96%"
-                elif atual >= sup: melhor_sinal, melhor_taxa = "PUT", "97%"
+            nome = ticker.replace("=X", "").replace("-USD", "/USD").replace("GC=F", "GOLD")
 
-            if melhor_sinal != "AGUARDAR":
-                melhor_ativo = nome_limpo
-                break 
-    except:
-        pass
+            # Lógica da Estratégia Extra Wander
+            if estrategia.upper() == "WANDER":
+                if atual <= inf or rsi < 40: 
+                    melhor_sinal, melhor_taxa, melhor_ativo = "CALL", "96%", nome
+                    break
+                elif atual >= sup or rsi > 60: 
+                    melhor_sinal, melhor_taxa, melhor_ativo = "PUT", "97%", nome
+                    break
+            else: # Zeus / Etare
+                if rsi < 45: 
+                    melhor_sinal, melhor_taxa, melhor_ativo = "CALL", "91%", nome
+                    break
+                elif rsi > 55: 
+                    melhor_sinal, melhor_taxa, melhor_ativo = "PUT", "92%", nome
+                    break
+        except:
+            continue
 
-    return {
-        "ativo": melhor_ativo,
-        "sinal": melhor_sinal,
-        "assertividade": melhor_taxa,
-        "resultado": "Win ✅" if melhor_sinal != "AGUARDAR" else "Analisando..."
-    }
+    if melhor_ativo == "PROCURANDO...": melhor_ativo = "EUR/USD"
+
+    return {"ativo": melhor_ativo, "sinal": melhor_sinal, "assertividade": melhor_taxa}
