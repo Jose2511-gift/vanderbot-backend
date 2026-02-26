@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 import pandas_ta as ta
-import time
 
 app = FastAPI()
 
@@ -13,10 +12,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Lista um pouco menor para o Yahoo não se irritar
+# Lista completa com os 12 ativos que você pediu (incluindo Japão e Ouro)
 ATIVOS = [
-    "EURUSD=X", "GBPUSD=X", "USDJPY=X", 
-    "BTC-USD", "ETH-USD", "GC=F"
+    "EURUSD=X", "GBPUSD=X", "USDJPY=X", "AUDUSD=X", "USDCAD=X", "EURJPY=X",
+    "GBPJPY=X", "GC=F", "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD"
 ]
 
 def calcular_indicadores(data):
@@ -36,13 +35,13 @@ def analisar(estrategia: str = "ZEUS", id: str = "0"):
     melhor_ativo = "EUR/USD"
     melhor_sinal = "AGUARDAR"
     melhor_taxa = "0%"
-    
-    # Baixa todos de uma vez (isso evita o erro de 'Too Many Requests')
+
     try:
-        dados_multiplos = yf.download(ATIVOS, period="1d", interval="1m", group_by='ticker', progress=False, threads=False)
-        
+        # BAIXA TUDO DE UMA VEZ (Isso evita o erro de 'Too Many Requests')
+        dados = yf.download(ATIVOS, period="1d", interval="1m", group_by='ticker', progress=False)
+
         for ticker in ATIVOS:
-            df = dados_multiplos[ticker].tail(30)
+            df = dados[ticker].tail(30)
             if len(df) < 20: continue
             
             rsi, atual, sup, inf = calcular_indicadores(df)
@@ -50,7 +49,7 @@ def analisar(estrategia: str = "ZEUS", id: str = "0"):
             
             nome_limpo = ticker.replace("=X", "").replace("-USD", "/USD").replace("GC=F", "GOLD")
 
-            # LÓGICA
+            # --- LÓGICA DAS 3 ESTRATÉGIAS ---
             if estrategia.upper() == "ZEUS":
                 if rsi < 40: melhor_sinal, melhor_taxa = "CALL", "91%"
                 elif rsi > 60: melhor_sinal, melhor_taxa = "PUT", "92%"
@@ -65,7 +64,7 @@ def analisar(estrategia: str = "ZEUS", id: str = "0"):
 
             if melhor_sinal != "AGUARDAR":
                 melhor_ativo = nome_limpo
-                break
+                break 
     except:
         pass
 
