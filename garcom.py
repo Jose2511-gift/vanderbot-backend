@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 import pandas_ta as ta
+import time
 
 app = FastAPI()
 
@@ -12,11 +13,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# LISTA COMPLETA COM 12 ATIVOS (Incluindo Japão, Ouro e Criptos)
+# Lista um pouco menor para o Yahoo não se irritar
 ATIVOS = [
-    "EURUSD=X", "GBPUSD=X", "USDJPY=X", "AUDUSD=X", 
-    "USDCAD=X", "EURJPY=X", "GBPJPY=X", "GC=F", 
-    "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD"
+    "EURUSD=X", "GBPUSD=X", "USDJPY=X", 
+    "BTC-USD", "ETH-USD", "GC=F"
 ]
 
 def calcular_indicadores(data):
@@ -33,50 +33,41 @@ def calcular_indicadores(data):
 
 @app.get("/analizar")
 def analisar(estrategia: str = "ZEUS", id: str = "0"):
-    melhor_ativo = "ANALISANDO..."
+    melhor_ativo = "EUR/USD"
     melhor_sinal = "AGUARDAR"
     melhor_taxa = "0%"
     
-    for ticker in ATIVOS:
-        try:
-            # Download rápido para não dar timeout no Render
-            df = yf.download(ticker, period="1d", interval="1m", progress=False).tail(30)
+    # Baixa todos de uma vez (isso evita o erro de 'Too Many Requests')
+    try:
+        dados_multiplos = yf.download(ATIVOS, period="1d", interval="1m", group_by='ticker', progress=False, threads=False)
+        
+        for ticker in ATIVOS:
+            df = dados_multiplos[ticker].tail(30)
             if len(df) < 20: continue
             
             rsi, atual, sup, inf = calcular_indicadores(df)
             if rsi is None: continue
             
-            # Limpa o nome para exibir bonito no seu App
-            nome_limpo = ticker.replace("=X", "").replace("-USD", "/USD").replace("GC=F", "GOLD (OURO)")
+            nome_limpo = ticker.replace("=X", "").replace("-USD", "/USD").replace("GC=F", "GOLD")
 
-            # --- LÓGICA DAS 3 ESTRATÉGIAS ---
-            
-            # 1. ZEUS (RSI AGRESSIVO)
+            # LÓGICA
             if estrategia.upper() == "ZEUS":
-                if rsi < 35: melhor_sinal, melhor_taxa = "CALL", "91%"
-                elif rsi > 65: melhor_sinal, melhor_taxa = "PUT", "92%"
+                if rsi < 40: melhor_sinal, melhor_taxa = "CALL", "91%"
+                elif rsi > 60: melhor_sinal, melhor_taxa = "PUT", "92%"
             
-            # 2. ETARE (RSI MODERADO)
             elif estrategia.upper() == "ETARE":
-                if rsi < 45: melhor_sinal, melhor_taxa = "CALL", "88%"
-                elif rsi > 55: melhor_sinal, melhor_taxa = "PUT", "89%"
+                if rsi < 48: melhor_sinal, melhor_taxa = "CALL", "88%"
+                elif rsi > 52: melhor_sinal, melhor_taxa = "PUT", "89%"
             
-            # 3. EXTRA WANDER (RSI + BANDAS DE BOLLINGER)
             elif estrategia.upper() == "WANDER":
-                if atual <= inf and rsi < 35: melhor_sinal, melhor_taxa = "CALL", "96%"
-                elif atual >= sup and rsi > 65: melhor_sinal, melhor_taxa = "PUT", "97%"
+                if atual <= inf: melhor_sinal, melhor_taxa = "CALL", "96%"
+                elif atual >= sup: melhor_sinal, melhor_taxa = "PUT", "97%"
 
-            # Se achou uma oportunidade, escolhe esse ativo e para a busca
             if melhor_sinal != "AGUARDAR":
                 melhor_ativo = nome_limpo
-                break 
-
-        except:
-            continue
-
-    # Se não achar nada nas 3 estratégias, ele sugere o primeiro da lista
-    if melhor_ativo == "ANALISANDO...":
-        melhor_ativo = "EUR/USD"
+                break
+    except:
+        pass
 
     return {
         "ativo": melhor_ativo,
