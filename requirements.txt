@@ -1,9 +1,5 @@
 fastapi
 uvicorn
-yfinance
+yfinance --upgrade
 pandas
 pandas-ta
-numpy
-requests
-lxml
-beautifulsoup4
