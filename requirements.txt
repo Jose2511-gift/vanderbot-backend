@@ -1,5 +1,6 @@
 fastapi
 uvicorn
-yfinance --upgrade
+yfinance 
 pandas
 pandas-ta
+
