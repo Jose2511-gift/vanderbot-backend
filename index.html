@@ -8,13 +8,14 @@
         body { background-color: #0b0e14; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
         .logo-img { width: 200px; margin-bottom: 20px; }
         .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; max-width: 380px; margin: 0 auto; text-align: left; }
-        .row { display: flex; gap: 10px; margin-bottom: 15px; }
-        .col { flex: 1; }
-        label { display: block; margin-bottom: 5px; color: #8b949e; font-size: 0.8rem; }
-        select, input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #30363d; background-color: #0d1117; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; border-radius: 6px; border: none; background-color: #009d43; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; margin: 15px 0; font-size: 1rem; }
-        .status-box { background: #0d1117; padding: 15px; border-radius: 8px; text-align: center; }
-        .win-text { color: #00ff6a; font-weight: bold; font-size: 1.2rem; }
+        label { display: block; margin-bottom: 8px; color: #8b949e; font-size: 0.9rem; }
+        select, input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #30363d; background-color: #0d1117; color: white; box-sizing: border-box; margin-bottom: 15px; font-size: 1rem; }
+        button { width: 100%; padding: 15px; border-radius: 6px; border: none; background-color: #009d43; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; margin: 10px 0; font-size: 1.1rem; transition: 0.3s; }
+        button:active { background-color: #007a35; }
+        .status-box { background: #0d1117; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; }
+        .win-text { color: #00ff6a; font-weight: bold; font-size: 1.3rem; }
+        .blink { animation: blinker 1.5s linear infinite; color: #00ff6a; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
@@ -22,20 +23,12 @@
     <img src="https://raw.githubusercontent.com/Jose2511-gift/vanderbot-backend/main/logo.png" alt="VANDERBOT PREMIUM" class="logo-img">
 
     <div class="card">
-        <div class="row">
-            <div class="col">
-                <label>Modo de operação:</label>
-                <select><option>Manual</option></select>
-            </div>
-            <div class="col">
-                <label>Selecione a estratégia:</label>
-                <select id="est">
-                    <option value="ZEUS">Zeus OTC</option>
-                    <option value="WANDER">Extra Wander</option>
-                    <option value="ETARE">Etare</option>
-                </select>
-            </div>
-        </div>
+        <label>Selecione a estratégia:</label>
+        <select id="est">
+            <option value="WANDER">Extra Wander (Recomendado)</option>
+            <option value="ZEUS">Zeus OTC</option>
+            <option value="ETARE">Etare</option>
+        </select>
 
         <label>ID da corretora:</label>
         <input type="text" placeholder="Seu ID" value="62846577">
@@ -43,9 +36,9 @@
         <button onclick="analisar()">ANALISAR MERCADO</button>
 
         <div class="status-box">
-            <p style="margin: 0; font-size: 0.8rem;"><span style="color: #00ff6a;">●</span> Conectado</p>
-            <p style="margin: 10px 0;">Par de moedas: <span id="ativo-exibido" class="win-text">AGUARDANDO...</span></p>
-            <p style="margin: 0;">Resultado: <span id="resultado-sinal">--</span></p>
+            <p style="margin: 0; font-size: 0.8rem;"><span class="blink">●</span> CONECTADO AO SERVIDOR</p>
+            <p style="margin: 15px 0; font-size: 1rem;">Ativo: <span id="ativo-exibido" class="win-text">AGUARDANDO...</span></p>
+            <p style="margin: 0;">Sinal: <span id="resultado-sinal" style="font-weight: bold;">--</span></p>
         </div>
     </div>
 
@@ -56,24 +49,26 @@
             const resTxt = document.getElementById('resultado-sinal');
             const est = document.getElementById('est').value;
             
-            btn.innerText = "ANALISANDO...";
-            ativoTxt.innerText = "BUSCANDO...";
-            resTxt.innerText = "Analisando";
+            btn.innerText = "BUSCANDO OPORTUNIDADE...";
+            btn.disabled = true;
+            ativoTxt.innerText = "ANALISANDO...";
+            resTxt.innerText = "--";
 
             try {
-                // Comando corrigido para evitar o erro 404 no Render
+                // Conecta com o seu servidor no Render
                 const response = await fetch(`https://vanderbot-backend.onrender.com/analizar?estrategia=${est}`);
                 const data = await response.json();
                 
-                // Muda o nome da moeda e o sinal conforme o robô decide
                 ativoTxt.innerText = data.ativo; 
-                resTxt.innerText = data.resultado;
+                resTxt.innerText = data.sinal + " (" + data.assertividade + ")";
                 resTxt.style.color = "#00ff6a";
             } catch (error) {
-                ativoTxt.innerText = "ERRO";
-                resTxt.innerText = "Servidor Offline - Tente de novo";
+                ativoTxt.innerText = "ERRO DE CONEXÃO";
+                resTxt.innerText = "Tente novamente";
+                resTxt.style.color = "red";
             }
             btn.innerText = "ANALISAR MERCADO";
+            btn.disabled = false;
         }
     </script>
 </body>
