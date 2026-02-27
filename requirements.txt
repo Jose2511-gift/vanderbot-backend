@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-yfinance 
+yfinance
 pandas
 pandas-ta
-
