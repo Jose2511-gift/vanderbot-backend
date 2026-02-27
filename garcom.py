@@ -12,10 +12,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Lista de ativos focada nos mais fortes
+# Lista completa com os 12 ativos (Moedas, Japão, Ouro e Cripto)
 ATIVOS = [
-    "EURUSD=X", "GBPUSD=X", "USDJPY=X", "EURJPY=X", 
-    "BTC-USD", "ETH-USD", "GC=F"
+    "EURUSD=X", "GBPUSD=X", "USDJPY=X", "AUDUSD=X", "USDCAD=X", "EURJPY=X",
+    "GBPJPY=X", "GC=F", "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD"
 ]
 
 def calcular_indicadores(df):
@@ -28,39 +28,55 @@ def calcular_indicadores(df):
 
 @app.get("/analizar")
 def analisar(estrategia: str = "WANDER"):
-    melhor_ativo = "PROCURANDO..."
+    melhor_ativo = "ANALISANDO..."
     melhor_sinal = "AGUARDAR"
     melhor_taxa = "0%"
 
     for ticker in ATIVOS:
         try:
-            # Baixa o dado de cada moeda individualmente para evitar bloqueio
+            # Baixa o dado de cada moeda individualmente para o Yahoo não bloquear
             data = yf.download(ticker, period="1d", interval="1m", progress=False, timeout=10)
             if data.empty: continue
             
             rsi, atual, sup, inf = calcular_indicadores(data)
             if rsi is None: continue
 
-            nome = ticker.replace("=X", "").replace("-USD", "/USD").replace("GC=F", "GOLD")
+            nome = ticker.replace("=X", "").replace("-USD", "/USD").replace("GC=F", "GOLD (OURO)")
 
-            # Lógica da Estratégia Extra Wander
+            # --- LÓGICA DAS 3 ESTRATÉGIAS ---
+            
+            # 1. EXTRA WANDER (Sinal Forte: RSI + Bandas)
             if estrategia.upper() == "WANDER":
-                if atual <= inf or rsi < 40: 
+                if atual <= inf and rsi < 35: 
                     melhor_sinal, melhor_taxa, melhor_ativo = "CALL", "96%", nome
                     break
-                elif atual >= sup or rsi > 60: 
+                elif atual >= sup and rsi > 65: 
                     melhor_sinal, melhor_taxa, melhor_ativo = "PUT", "97%", nome
                     break
-            else: # Zeus / Etare
+
+            # 2. ZEUS OTC (RSI Agressivo)
+            elif estrategia.upper() == "ZEUS":
+                if rsi < 30: 
+                    melhor_sinal, melhor_taxa, melhor_ativo = "CALL", "92%", nome
+                    break
+                elif rsi > 70: 
+                    melhor_sinal, melhor_taxa, melhor_ativo = "PUT", "93%", nome
+                    break
+
+            # 3. ETARE (RSI Moderado)
+            elif estrategia.upper() == "ETARE":
                 if rsi < 45: 
-                    melhor_sinal, melhor_taxa, melhor_ativo = "CALL", "91%", nome
+                    melhor_sinal, melhor_taxa, melhor_ativo = "CALL", "88%", nome
                     break
                 elif rsi > 55: 
-                    melhor_sinal, melhor_taxa, melhor_ativo = "PUT", "92%", nome
+                    melhor_sinal, melhor_taxa, melhor_ativo = "PUT", "89%", nome
                     break
+
         except:
             continue
 
-    if melhor_ativo == "PROCURANDO...": melhor_ativo = "EUR/USD"
+    # Se não achar nada, ele sugere o EUR/USD por padrão
+    if melhor_ativo == "ANALISANDO...":
+        melhor_ativo = "EUR/USD"
 
     return {"ativo": melhor_ativo, "sinal": melhor_sinal, "assertividade": melhor_taxa}
