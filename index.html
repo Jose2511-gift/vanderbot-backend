@@ -44,6 +44,45 @@
 
     <script>
         async function analisar() {
+    const btn = document.querySelector('button');
+    const ativoTxt = document.getElementById('ativo-exibido');
+    const resTxt = document.getElementById('resultado-sinal');
+    const est = document.getElementById('est').value;
+    
+    btn.innerText = "BUSCANDO OPORTUNIDADE...";
+    btn.disabled = true;
+    
+    // Limpa a tela antes de mostrar o novo
+    ativoTxt.innerText = "ANALISANDO...";
+    resTxt.innerText = "--";
+
+    try {
+        // CHAMA O SEU ROBÔ NO RENDER
+        const response = await fetch(`https://vanderbot-backend.onrender.com/analizar?estrategia=${est}`);
+        const data = await response.json();
+        
+        // AQUI ESTÁ O SEGREDO: ELE PRECISA PEGAR O ATIVO QUE VEM DO SERVIDOR!
+        ativoTxt.innerText = data.ativo; 
+        resTxt.innerText = data.sinal + " (" + data.assertividade + ")";
+        
+        // MUDA A COR SE FOR SINAL REAL
+        if (data.sinal !== "AGUARDAR") {
+            resTxt.style.color = "#00ff6a";
+            ativoTxt.style.color = "#00ff6a";
+        } else {
+            resTxt.style.color = "white";
+            ativoTxt.style.color = "white";
+        }
+
+    } catch (error) {
+        ativoTxt.innerText = "ERRO DE CONEXÃO";
+        resTxt.innerText = "Servidor Offline";
+        resTxt.style.color = "red";
+    }
+    
+    btn.innerText = "ANALISAR MERCADO";
+    btn.disabled = false;
+}
             const btn = document.querySelector('button');
             const ativoTxt = document.getElementById('ativo-exibido');
             const resTxt = document.getElementById('resultado-sinal');
