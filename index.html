@@ -23,24 +23,24 @@
     <img src="https://raw.githubusercontent.com/Jose2511-gift/vanderbot-backend/main/logo.png" alt="VANDERBOT PREMIUM" class="logo-img">
 
     <div class="card">
-        <label>Selecione a estratégia:</label>
-        <select id="est">
-            <option value="WANDER">Extra Wander (Recomendado)</option>
-            <option value="ZEUS">Zeus OTC</option>
-            <option value="ETARE">Etare</option>
-        </select>
+    <label for="est">Selecione a estratégia:</label>
+    <select id="est" name="estrategia">
+        <option value="WANDER">Extra Wander (Recomendado)</option>
+        <option value="ZEUS">Zeus OTC</option>
+        <option value="ETARE">Etare</option>
+    </select>
 
-        <label>ID da corretora:</label>
-        <input type="text" placeholder="Seu ID" value="62846577">
+    <label for="corretora_id">ID da corretora:</label>
+    <input type="text" id="corretora_id" name="corretora_id" placeholder="Seu ID" value="62846577" autocomplete="username">
 
-        <button onclick="analisar()">ANALISAR MERCADO</button>
+    <button onclick="analisar()">ANALISAR MERCADO</button>
 
-        <div class="status-box">
-            <p style="margin: 0; font-size: 0.8rem;"><span class="blink">●</span> CONECTADO AO SERVIDOR</p>
-            <p style="margin: 15px 0; font-size: 1rem;">Ativo: <span id="ativo-exibido" class="win-text">AGUARDANDO...</span></p>
-            <p style="margin: 0;">Sinal: <span id="resultado-sinal" style="font-weight: bold;">--</span></p>
-        </div>
+    <div class="status-box">
+        <p style="margin: 0; font-size: 0.8rem;"><span class="blink">●</span> CONECTADO AO SERVIDOR</p>
+        <p style="margin: 15px 0; font-size: 1rem;">Ativo: <span id="ativo-exibido" class="win-text">AGUARDANDO...</span></p>
+        <p style="margin: 0;">Sinal: <span id="resultado-sinal" style="font-weight: bold;">--</span></p>
     </div>
+</div>
 
     <script>
         async function analisar() {
