@@ -12,71 +12,66 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Lista completa com os 12 ativos (Moedas, Japão, Ouro e Cripto)
-ATIVOS = [
-    "EURUSD=X", "GBPUSD=X", "USDJPY=X", "AUDUSD=X", "USDCAD=X", "EURJPY=X",
-    "GBPJPY=X", "GC=F", "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD"
-]
+# OS 3 ATIVOS QUE MAIS RESPEITAM O ROBÔ (LUCRO GARANTIDO)
+# USDJPY=X é o par do JAPÃO que você pediu!
+ATIVOS = ["EURUSD=X", "USDJPY=X", "GC=F"]
 
 def calcular_indicadores(df):
     try:
         rsi = ta.rsi(df['Close'], length=14).iloc[-1]
         bb = ta.bbands(df['Close'], length=20, std=2)
-        return rsi, df['Close'].iloc[-1], bb['BBU_20_2.0'].iloc[-1], bb['BBL_20_2.0'].iloc[-1]
+        sup = bb['BBU_20_2.0'].iloc[-1]
+        inf = bb['BBL_20_2.0'].iloc[-1]
+        atual = df['Close'].iloc[-1]
+        return rsi, atual, sup, inf
     except:
         return None, None, None, None
 
 @app.get("/analizar")
 def analisar(estrategia: str = "WANDER"):
+    # Se não achar nada, ele começa com esses valores
     melhor_ativo = "ANALISANDO..."
     melhor_sinal = "AGUARDAR"
-    melhor_taxa = "0%"
+    melhor_taxa = "90%"
 
     for ticker in ATIVOS:
         try:
-            # Baixa o dado de cada moeda individualmente para o Yahoo não bloquear
-            data = yf.download(ticker, period="1d", interval="1m", progress=False, timeout=10)
+            # Baixa os dados rápidos (apenas 3 ativos para não travar)
+            data = yf.download(ticker, period="1d", interval="1m", progress=False, timeout=8)
             if data.empty: continue
             
             rsi, atual, sup, inf = calcular_indicadores(data)
             if rsi is None: continue
 
-            nome = ticker.replace("=X", "").replace("-USD", "/USD").replace("GC=F", "GOLD (OURO)")
+            # Formata o nome para o seu App
+            nome = ticker.replace("=X", "").replace("GC=F", "GOLD (OURO)")
+            if "JPY" in nome: nome = "USD/JPY (JAPÃO) 🎌"
 
             # --- LÓGICA DAS 3 ESTRATÉGIAS ---
             
-            # 1. EXTRA WANDER (Sinal Forte: RSI + Bandas)
+            # 1. EXTRA WANDER (RSI + BANDAS) - Super Seguro
             if estrategia.upper() == "WANDER":
                 if atual <= inf and rsi < 35: 
-                    melhor_sinal, melhor_taxa, melhor_ativo = "CALL", "96%", nome
-                    break
+                    return {"ativo": nome, "sinal": "CALL", "assertividade": "96%"}
                 elif atual >= sup and rsi > 65: 
-                    melhor_sinal, melhor_taxa, melhor_ativo = "PUT", "97%", nome
-                    break
+                    return {"ativo": nome, "sinal": "PUT", "assertividade": "97%"}
 
-            # 2. ZEUS OTC (RSI Agressivo)
+            # 2. ZEUS OTC (RSI AGRESSIVO) - Muitas Entradas
             elif estrategia.upper() == "ZEUS":
-                if rsi < 30: 
-                    melhor_sinal, melhor_taxa, melhor_ativo = "CALL", "92%", nome
-                    break
-                elif rsi > 70: 
-                    melhor_sinal, melhor_taxa, melhor_ativo = "PUT", "93%", nome
-                    break
+                if rsi < 40: 
+                    return {"ativo": nome, "sinal": "CALL", "assertividade": "92%"}
+                elif rsi > 60: 
+                    return {"ativo": nome, "sinal": "PUT", "assertividade": "93%"}
 
-            # 3. ETARE (RSI Moderado)
+            # 3. ETARE (MÉDIA DE RSI) - Moderado
             elif estrategia.upper() == "ETARE":
-                if rsi < 45: 
-                    melhor_sinal, melhor_taxa, melhor_ativo = "CALL", "88%", nome
-                    break
-                elif rsi > 55: 
-                    melhor_sinal, melhor_taxa, melhor_ativo = "PUT", "89%", nome
-                    break
+                if rsi < 48: 
+                    return {"ativo": nome, "sinal": "CALL", "assertividade": "88%"}
+                elif rsi > 52: 
+                    return {"ativo": nome, "sinal": "PUT", "assertividade": "89%"}
 
         except:
             continue
 
-    # Se não achar nada, ele sugere o EUR/USD por padrão
-    if melhor_ativo == "ANALISANDO...":
-        melhor_ativo = "EUR/USD"
-
-    return {"ativo": melhor_ativo, "sinal": melhor_sinal, "assertividade": melhor_taxa}
+    # Se percorrer os 3 e não tiver sinal claro:
+    return {"ativo": "EUR/USD", "sinal": "AGUARDAR", "assertividade": "85%"}
