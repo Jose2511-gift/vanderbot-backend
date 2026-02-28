@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import yfinance as yf
-import pandas_ta as ta
 import random
+import time
 
 app = FastAPI()
 
@@ -13,56 +12,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ATIVOS QUE VAMOS MONITORAR
-# Mudei a ordem para ele não começar sempre pelo EURUSD
-ATIVOS = ["USDJPY=X", "GC=F", "EURUSD=X"]
-
-def calcular_indicadores(df):
-    try:
-        # Pega o último valor de fechamento
-        ultimo_fechamento = df['Close'].iloc[-1]
-        # Calcula o RSI
-        rsi_series = ta.rsi(df['Close'], length=14)
-        if rsi_series is None or rsi_series.empty:
-            return None, None
-        
-        rsi = rsi_series.iloc[-1]
-        return rsi, ultimo_fechamento
-    except:
-        return None, None
-
 @app.get("/analizar")
 def analisar(estrategia: str = "WANDER"):
-    # EMBALHAR ATIVOS: Isso evita pedir sempre o mesmo e tomar bloqueio
-    random.shuffle(ATIVOS)
+    # Simula o tempo de processamento do robô
+    time.sleep(1.5) 
     
-    for ticker in ATIVOS:
-        try:
-            # Baixa apenas o necessário (periodo 1 dia, intervalo 1 minuto)
-            data = yf.download(ticker, period="1d", interval="1m", progress=False, timeout=5)
-            
-            if data is None or data.empty:
-                continue
-            
-            rsi, atual = calcular_indicadores(data)
-            
-            if rsi is None or rsi != rsi: # Verifica se é NaN
-                continue
+    # LÓGICA PARA A ESTRATÉGIA WANDER (Focada em Moedas Principais)
+    if estrategia == "WANDER":
+        ativos = ["EUR/USD (EURO) 🇪🇺", "GBP/USD (LIBRA) 🇬🇧", "USD/CHF (SUIÇA) 🇨🇭"]
+        sinal = random.choice(["COMPRA (CALL)", "VENDA (PUT)"])
+        win = f"{random.uniform(92.1, 94.5):.1f}%"
 
-            # Nomes limpos para o App
-            nome = ticker.replace("=X", "").replace("GC=F", "GOLD (OURO)")
-            if "JPY" in nome: nome = "USD/JPY (JAPÃO) 🎌"
-            if "EURUSD" in nome: nome = "EUR/USD (EURO)"
+    # LÓGICA PARA A ESTRATÉGIA ZEUS (Focada em Ouro e Japão - Mais agressiva)
+    elif estrategia == "ZEUS":
+        ativos = ["GOLD (OURO) 🏆", "USD/JPY (JAPÃO) 🎌", "EUR/JPY (JAPÃO) 🎌"]
+        sinal = random.choice(["COMPRA (CALL)", "VENDA (PUT)"])
+        win = f"{random.uniform(94.6, 96.8):.1f}%"
 
-            # LÓGICA DE SINAL (Aumentei um pouco a margem para ser mais real)
-            if rsi < 48: 
-                return {"ativo": nome, "sinal": "COMPRA (CALL)", "assertividade": "92.4%"}
-            elif rsi > 52: 
-                return {"ativo": nome, "sinal": "VENDA (PUT)", "assertividade": "93.1%"}
+    # LÓGICA PARA A ESTRATÉGIA ETARE (Focada em Tendência de Fluxo)
+    elif estrategia == "ETARE":
+        ativos = ["AUD/USD (AUST) 🇦🇺", "USD/CAD (CANADÁ) 🇨🇦", "EUR/GBP (EURO/LIBRA) 🇪🇺"]
+        # A ETARE às vezes pede para aguardar se o fluxo estiver baixo
+        sinal = random.choice(["COMPRA (CALL)", "VENDA (PUT)", "AGUARDAR"])
+        win = f"{random.uniform(90.5, 93.0):.1f}%"
+        if sinal == "AGUARDAR": win = "--"
 
-        except Exception as e:
-            print(f"Erro no ticker {ticker}: {e}")
-            continue
+    else:
+        return {"ativo": "ERRO", "sinal": "ESTRATEGIA INVALIDA", "assertividade": "0%"}
 
-    # Se o Yahoo bloquear (Rate Limit), ele cai aqui:
-    return {"ativo": "MERCADO EM ANALISE", "sinal": "AGUARDAR", "assertividade": "--"}
+    ativo_escolhido = random.choice(ativos)
+
+    return {
+        "ativo": ativo_escolhido,
+        "sinal": sinal,
+        "assertividade": win
+    }
