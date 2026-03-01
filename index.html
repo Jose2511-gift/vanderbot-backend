@@ -30,7 +30,7 @@
         </select>
 
         <label>ID CORRETORA:</label>
-        <input type="text" id="id_user" value="62846177">
+        <input type="text" id="id_user" placeholder="Digite seu ID" value="62846177">
 
         <button id="btn" onclick="buscarSinal()">ANALISAR MERCADO</button>
 
@@ -41,6 +41,7 @@
     </div>
 
     <script>
+        // Registro do Service Worker para funcionar como App
         if('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 
         async function buscarSinal() {
@@ -48,33 +49,39 @@
             const ativo = document.getElementById('txt-ativo');
             const sinal = document.getElementById('txt-sinal');
             const est = document.getElementById('est').value;
+            const id_user = document.getElementById('id_user').value;
 
-            // Passo 1: Limpa a tela para você ver que está funcionando
+            // Interface visual de carregamento
             btn.innerText = "BUSCANDO...";
             btn.disabled = true;
             ativo.innerText = "LENDO MERCADO...";
             sinal.innerText = "---";
 
             try {
-                // Passo 2: Busca no seu servidor do Render
-                // Adicionei o timestamp (&t=...) para o celular não viciar no resultado antigo
-                const url = `https://vanderbot-backend.onrender.com/analizar?estrategia=${est}&t=${new Date().getTime()}`;
+                // Envia a estratégia e o ID para o servidor no Render
+                const url = `https://vanderbot-backend.onrender.com/analizar?estrategia=${est}&id_user=${id_user}&t=${new Date().getTime()}`;
                 const res = await fetch(url);
                 const data = await res.json();
 
-                // Passo 3: Mostra o que o servidor mandou
-                ativo.innerText = data.ativo; // <--- AQUI MUDA O NOME DA MOEDA
+                // Exibe o ativo (ex: [QUOTEX] EUR/USD)
+                ativo.innerText = data.ativo;
+                
+                // Exibe o sinal e a assertividade
                 sinal.innerText = data.sinal + " (" + data.assertividade + ")";
                 
-                if(data.sinal !== "AGUARDAR") {
-                    sinal.style.color = "#00ff6a";
+                // Ajuste de cores baseado no sinal recebido
+                if(data.sinal.includes("COMPRA")) {
+                    sinal.style.color = "#00ff6a"; // Verde para Call
+                } else if(data.sinal.includes("VENDA")) {
+                    sinal.style.color = "#ff4b4b"; // Vermelho para Put
                 } else {
-                    sinal.style.color = "white";
+                    sinal.style.color = "white"; // Branco para Aguardar ou Erro
                 }
 
             } catch (e) {
                 ativo.innerText = "ERRO DE CONEXÃO";
-                sinal.innerText = "TENTE DE NOVO";
+                sinal.innerText = "TENTE NOVAMENTE";
+                sinal.style.color = "yellow";
             } finally {
                 btn.innerText = "ANALISAR MERCADO";
                 btn.disabled = false;
