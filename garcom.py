@@ -13,37 +13,50 @@ app.add_middleware(
 )
 
 @app.get("/analizar")
-def analisar(estrategia: str = "WANDER"):
-    # Simula o tempo de processamento do robô
-    time.sleep(1.5) 
+def analisar(estrategia: str = "WANDER", id_user: str = ""):
+    # Pequena pausa para simular a inteligência artificial pensando
+    time.sleep(1.2) 
     
-    # LÓGICA PARA A ESTRATÉGIA WANDER (Focada em Moedas Principais)
-    if estrategia == "WANDER":
-        ativos = ["EUR/USD (EURO) 🇪🇺", "GBP/USD (LIBRA) 🇬🇧", "USD/CHF (SUIÇA) 🇨🇭"]
-        sinal = random.choice(["COMPRA (CALL)", "VENDA (PUT)"])
-        win = f"{random.uniform(92.1, 94.5):.1f}%"
+    # BANCO DE DADOS DE IDS AUTORIZADOS
+    corretoras = {
+        "62846177": "QUOTEX",
+        "97181892": "IQ OPTION",
+        "174555933": "POLARIUM",
+        "171825029": "STOCKITY"
+    }
 
-    # LÓGICA PARA A ESTRATÉGIA ZEUS (Focada em Ouro e Japão - Mais agressiva)
-    elif estrategia == "ZEUS":
-        ativos = ["GOLD (OURO) 🏆", "USD/JPY (JAPÃO) 🎌", "EUR/JPY (JAPÃO) 🎌"]
-        sinal = random.choice(["COMPRA (CALL)", "VENDA (PUT)"])
-        win = f"{random.uniform(94.6, 96.8):.1f}%"
+    # Verifica se o ID digitado no App existe na nossa lista
+    if id_user not in corretoras:
+        return {
+            "ativo": "ID NÃO AUTORIZADO", 
+            "sinal": "VERIFIQUE SEU ID", 
+            "assertividade": "0%"
+        }
 
-    # LÓGICA PARA A ESTRATÉGIA ETARE (Focada em Tendência de Fluxo)
+    nome_corretora = corretoras[id_user]
+
+    # Configuração de Ativos por Estratégia
+    if estrategia == "ZEUS":
+        ativos = ["GOLD (OURO) 🏆", "USD/JPY 🎌", "EUR/JPY 🎌"]
+        win = f"{random.uniform(94.5, 96.5):.1f}%"
     elif estrategia == "ETARE":
-        ativos = ["AUD/USD (AUST) 🇦🇺", "USD/CAD (CANADÁ) 🇨🇦", "EUR/GBP (EURO/LIBRA) 🇪🇺"]
-        # A ETARE às vezes pede para aguardar se o fluxo estiver baixo
-        sinal = random.choice(["COMPRA (CALL)", "VENDA (PUT)", "AGUARDAR"])
-        win = f"{random.uniform(90.5, 93.0):.1f}%"
-        if sinal == "AGUARDAR": win = "--"
+        ativos = ["AUD/USD 🇦🇺", "USD/CAD 🇨🇦", "EUR/GBP 🇪🇺"]
+        win = f"{random.uniform(91.0, 93.5):.1f}%"
+    else: # WANDER
+        ativos = ["EUR/USD 🇪🇺", "GBP/USD 🇬🇧", "USD/CHF 🇨🇭"]
+        win = f"{random.uniform(92.5, 94.8):.1f}%"
 
-    else:
-        return {"ativo": "ERRO", "sinal": "ESTRATEGIA INVALIDA", "assertividade": "0%"}
+    sinal = random.choice(["COMPRA (CALL)", "VENDA (PUT)"])
+    # Para a ETARE, às vezes o mercado entra em espera
+    if estrategia == "ETARE" and random.random() < 0.2:
+        sinal = "AGUARDAR"
+        win = "--"
 
     ativo_escolhido = random.choice(ativos)
 
+    # Retorna o resultado com o nome da corretora no início
     return {
-        "ativo": ativo_escolhido,
+        "ativo": f"[{nome_corretora}] {ativo_escolhido}",
         "sinal": sinal,
         "assertividade": win
     }
