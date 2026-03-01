@@ -14,18 +14,17 @@ app.add_middleware(
 
 @app.get("/analizar")
 def analisar(estrategia: str = "WANDER", id_user: str = ""):
-    # Pequena pausa para simular a inteligência artificial pensando
     time.sleep(1.2) 
     
-    # BANCO DE DADOS DE IDS AUTORIZADOS
+    # BANCO DE DADOS ATUALIZADO COM SEUS 4 IDs
     corretoras = {
         "62846177": "QUOTEX",
         "97181892": "IQ OPTION",
-        "174555933": "POLARIUM",
+        "174555933": "POLARIUM", # O ID QUE VOCÊ ESTÁ TENTANDO USAR
         "171825029": "STOCKITY"
     }
 
-    # Verifica se o ID digitado no App existe na nossa lista
+    # Se o ID não estiver na lista acima, ele bloqueia
     if id_user not in corretoras:
         return {
             "ativo": "ID NÃO AUTORIZADO", 
@@ -35,26 +34,20 @@ def analisar(estrategia: str = "WANDER", id_user: str = ""):
 
     nome_corretora = corretoras[id_user]
 
-    # Configuração de Ativos por Estratégia
+    # Ativos por Estratégia
     if estrategia == "ZEUS":
-        ativos = ["GOLD (OURO) 🏆", "USD/JPY 🎌", "EUR/JPY 🎌"]
+        ativos = ["GOLD (OURO) 🏆", "USD/JPY 🎌"]
         win = f"{random.uniform(94.5, 96.5):.1f}%"
     elif estrategia == "ETARE":
-        ativos = ["AUD/USD 🇦🇺", "USD/CAD 🇨🇦", "EUR/GBP 🇪🇺"]
+        ativos = ["AUD/USD 🇦🇺", "EUR/GBP 🇪🇺"]
         win = f"{random.uniform(91.0, 93.5):.1f}%"
     else: # WANDER
         ativos = ["EUR/USD 🇪🇺", "GBP/USD 🇬🇧", "USD/CHF 🇨🇭"]
         win = f"{random.uniform(92.5, 94.8):.1f}%"
 
     sinal = random.choice(["COMPRA (CALL)", "VENDA (PUT)"])
-    # Para a ETARE, às vezes o mercado entra em espera
-    if estrategia == "ETARE" and random.random() < 0.2:
-        sinal = "AGUARDAR"
-        win = "--"
-
     ativo_escolhido = random.choice(ativos)
 
-    # Retorna o resultado com o nome da corretora no início
     return {
         "ativo": f"[{nome_corretora}] {ativo_escolhido}",
         "sinal": sinal,
