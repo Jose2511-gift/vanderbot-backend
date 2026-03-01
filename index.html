@@ -41,7 +41,7 @@
     </div>
 
     <script>
-        // Registro do Service Worker para funcionar como App
+        // Registro do Service Worker para transformar em App (PWA)
         if('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 
         async function buscarSinal() {
@@ -51,14 +51,14 @@
             const est = document.getElementById('est').value;
             const id_user = document.getElementById('id_user').value;
 
-            // Interface visual de carregamento
+            // Feedback visual imediato
             btn.innerText = "BUSCANDO...";
             btn.disabled = true;
             ativo.innerText = "LENDO MERCADO...";
             sinal.innerText = "---";
 
             try {
-                // Envia a estratégia e o ID para o servidor no Render
+                // URL configurada para enviar o ID e evitar o cache do celular
                 const url = `https://vanderbot-backend.onrender.com/analizar?estrategia=${est}&id_user=${id_user}&t=${new Date().getTime()}`;
                 const res = await fetch(url);
                 const data = await res.json();
@@ -66,22 +66,21 @@
                 // Exibe o ativo (ex: [QUOTEX] EUR/USD)
                 ativo.innerText = data.ativo;
                 
-                // Exibe o sinal e a assertividade
+                // Exibe o sinal e a assertividade (ex: COMPRA (CALL) (93.7%))
                 sinal.innerText = data.sinal + " (" + data.assertividade + ")";
                 
-                // Ajuste de cores baseado no sinal recebido
+                // Lógica dinâmica de cores
                 if(data.sinal.includes("COMPRA")) {
-                    sinal.style.color = "#00ff6a"; // Verde para Call
+                    sinal.style.color = "#00ff6a"; // Verde vibrante
                 } else if(data.sinal.includes("VENDA")) {
-                    sinal.style.color = "#ff4b4b"; // Vermelho para Put
+                    sinal.style.color = "#ff4b4b"; // Vermelho alerta
                 } else {
-                    sinal.style.color = "white"; // Branco para Aguardar ou Erro
+                    sinal.style.color = "white"; // Branco para neutro
                 }
 
             } catch (e) {
                 ativo.innerText = "ERRO DE CONEXÃO";
                 sinal.innerText = "TENTE NOVAMENTE";
-                sinal.style.color = "yellow";
             } finally {
                 btn.innerText = "ANALISAR MERCADO";
                 btn.disabled = false;
