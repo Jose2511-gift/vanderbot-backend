@@ -4,17 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
-    <title>VANDERBOT PREMIUM</title>
+    <title>VANDERBOT PRIVATE</title>
     <style>
         body { background-color: #0b0e14; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
         .logo-img { width: 180px; margin-bottom: 20px; }
         .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; max-width: 360px; margin: 0 auto; text-align: left; }
-        label { display: block; margin-bottom: 8px; color: #8b949e; font-size: 0.9rem; }
-        select, input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #30363d; background-color: #0d1117; color: white; box-sizing: border-box; margin-bottom: 15px; font-size: 1rem; outline: none; }
+        label { display: block; margin-bottom: 8px; color: #8b949e; font-size: 0.8rem; text-transform: uppercase; font-weight: bold; }
+        select { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #30363d; background-color: #0d1117; color: white; box-sizing: border-box; margin-bottom: 15px; font-size: 1rem; outline: none; cursor: pointer; appearance: none; }
         button { width: 100%; padding: 15px; border-radius: 6px; border: none; background-color: #009d43; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 1.1rem; }
         button:disabled { opacity: 0.5; }
         .status-box { background: #0d1117; padding: 15px; border-radius: 8px; text-align: center; margin-top: 15px; border: 1px dashed #30363d; }
-        .win-text { color: #00ff6a; font-weight: bold; font-size: 1.2rem; }
+        .win-text { color: #00ff6a; font-weight: bold; font-size: 1.4rem; }
+        #txt-sinal { font-size: 1.2rem; display: block; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -29,19 +30,26 @@
             <option value="ETARE">ETARE</option>
         </select>
 
-        <label>ID CORRETORA:</label>
-        <input type="text" id="id_user" placeholder="Digite seu ID" value="62846177">
+        <label>MINHA CORRETORA:</label>
+        <select id="id_user">
+            <option value="174555933">POLARIUM</option>
+            <option value="62846177">QUOTEX</option>
+            <option value="97181892">IQ OPTION</option>
+            <option value="171825029">STOCKITY</option>
+        </select>
 
         <button id="btn" onclick="buscarSinal()">ANALISAR MERCADO</button>
 
         <div class="status-box">
-            <p>ATIVO: <span id="txt-ativo" class="win-text">AGUARDANDO...</span></p>
-            <p>SINAL: <span id="txt-sinal" style="font-weight: bold;">--</span></p>
+            <p style="margin:0; color:#8b949e;">ATIVO:</p>
+            <span id="txt-ativo" class="win-text">AGUARDANDO...</span>
+            
+            <p style="margin:10px 0 0 0; color:#8b949e;">SINAL:</p>
+            <span id="txt-sinal">--</span>
         </div>
     </div>
 
     <script>
-        // Registro do Service Worker para transformar em App (PWA)
         if('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 
         async function buscarSinal() {
@@ -51,36 +59,34 @@
             const est = document.getElementById('est').value;
             const id_user = document.getElementById('id_user').value;
 
-            // Feedback visual imediato
-            btn.innerText = "BUSCANDO...";
+            btn.innerText = "ANALISANDO...";
             btn.disabled = true;
-            ativo.innerText = "LENDO MERCADO...";
+            ativo.innerText = "LENDO GRÁFICO...";
             sinal.innerText = "---";
 
             try {
-                // URL configurada para enviar o ID e evitar o cache do celular
                 const url = `https://vanderbot-backend.onrender.com/analizar?estrategia=${est}&id_user=${id_user}&t=${new Date().getTime()}`;
                 const res = await fetch(url);
                 const data = await res.json();
 
-                // Exibe o ativo (ex: [QUOTEX] EUR/USD)
-                ativo.innerText = data.ativo;
+                // LIMPEZA DO NOME DA CORRETORA:
+                // Se o servidor mandar "[POLARIUM] EUR/USD", a linha abaixo limpa e deixa só "EUR/USD"
+                let ativoFinal = data.ativo.split('] ').pop();
                 
-                // Exibe o sinal e a assertividade (ex: COMPRA (CALL) (93.7%))
+                ativo.innerText = ativoFinal;
                 sinal.innerText = data.sinal + " (" + data.assertividade + ")";
                 
-                // Lógica dinâmica de cores
                 if(data.sinal.includes("COMPRA")) {
-                    sinal.style.color = "#00ff6a"; // Verde vibrante
+                    sinal.style.color = "#00ff6a";
                 } else if(data.sinal.includes("VENDA")) {
-                    sinal.style.color = "#ff4b4b"; // Vermelho alerta
+                    sinal.style.color = "#ff4b4b";
                 } else {
-                    sinal.style.color = "white"; // Branco para neutro
+                    sinal.style.color = "white";
                 }
 
             } catch (e) {
                 ativo.innerText = "ERRO DE CONEXÃO";
-                sinal.innerText = "TENTE NOVAMENTE";
+                sinal.innerText = "VERIFIQUE O RENDER";
             } finally {
                 btn.innerText = "ANALISAR MERCADO";
                 btn.disabled = false;
