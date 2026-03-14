@@ -3,95 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="manifest.json">
-    <title>VANDERBOT PRIVATE</title>
+    <title>VANDERBOT PREMIUM IA</title>
     <style>
-        body { background-color: #0b0e14; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .logo-img { width: 180px; margin-bottom: 20px; }
-        .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; max-width: 360px; margin: 0 auto; text-align: left; }
-        label { display: block; margin-bottom: 8px; color: #8b949e; font-size: 0.8rem; text-transform: uppercase; font-weight: bold; }
-        select { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #30363d; background-color: #0d1117; color: white; box-sizing: border-box; margin-bottom: 15px; font-size: 1rem; outline: none; cursor: pointer; appearance: none; }
-        button { width: 100%; padding: 15px; border-radius: 6px; border: none; background-color: #009d43; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 1.1rem; }
-        button:disabled { opacity: 0.5; }
-        .status-box { background: #0d1117; padding: 15px; border-radius: 8px; text-align: center; margin-top: 15px; border: 1px dashed #30363d; }
-        .win-text { color: #00ff6a; font-weight: bold; font-size: 1.4rem; }
-        #txt-sinal { font-size: 1.2rem; display: block; margin-top: 5px; }
+        body { background-color: #0b0e11; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
+        .card { background: #1e2329; border-radius: 15px; padding: 20px; border: 1px solid #f0b90b; box-shadow: 0 4px 15px rgba(240, 185, 11, 0.2); }
+        .btn { background: #f0b90b; border: none; padding: 15px 30px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; }
+        .status { font-size: 24px; margin: 15px 0; font-weight: bold; }
+        .alerta { color: #f0b90b; font-size: 16px; margin-top: 10px; padding: 10px; border-radius: 5px; background: rgba(240, 185, 11, 0.1); }
+        .cronometro { color: #848e9c; font-size: 14px; margin-top: 5px; }
+        .buy { color: #0ecb81; }
+        .sell { color: #f6465d; }
     </style>
 </head>
 <body>
-
-    <img src="https://raw.githubusercontent.com/Jose2511-gift/vanderbot-backend/main/logo.png" class="logo-img">
-
     <div class="card">
-        <label>ESTRATEGIA:</label>
-        <select id="est">
-            <option value="WANDER">EXTRA WANDER</option>
-            <option value="ZEUS">ZEUS OTC</option>
-            <option value="ETARE">ETARE</option>
-        </select>
-
-        <label>MINHA CORRETORA:</label>
-        <select id="id_user">
-            <option value="174555933">POLARIUM</option>
-            <option value="62846177">QUOTEX</option>
-            <option value="97181892">IQ OPTION</option>
-            <option value="171825029">STOCKITY</option>
-        </select>
-
-        <button id="btn" onclick="buscarSinal()">ANALISAR MERCADO</button>
-
-        <div class="status-box">
-            <p style="margin:0; color:#8b949e;">ATIVO:</p>
-            <span id="txt-ativo" class="win-text">AGUARDANDO...</span>
-            
-            <p style="margin:10px 0 0 0; color:#8b949e;">SINAL:</p>
-            <span id="txt-sinal">--</span>
+        <h1>VANDERBOT <span style="color:#f0b90b">PREMIUM</span></h1>
+        
+        <div id="resultado">
+            <p>Selecione a estratégia e clique em Analisar</p>
         </div>
+
+        <button class="btn" onclick="analisar()">ANALISAR MERCADO</button>
+        
+        <div id="cronometro_display" class="cronometro">Sincronizando relógio...</div>
     </div>
 
     <script>
-        if('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-
-        async function buscarSinal() {
-            const btn = document.getElementById('btn');
-            const ativo = document.getElementById('txt-ativo');
-            const sinal = document.getElementById('txt-sinal');
-            const est = document.getElementById('est').value;
-            const id_user = document.getElementById('id_user').value;
-
-            btn.innerText = "ANALISANDO...";
-            btn.disabled = true;
-            ativo.innerText = "LENDO GRÁFICO...";
-            sinal.innerText = "---";
-
-            try {
-                const url = `https://vanderbot-backend.onrender.com/analizar?estrategia=${est}&id_user=${id_user}&t=${new Date().getTime()}`;
-                const res = await fetch(url);
-                const data = await res.json();
-
-                // LIMPEZA DO NOME DA CORRETORA:
-                // Se o servidor mandar "[POLARIUM] EUR/USD", a linha abaixo limpa e deixa só "EUR/USD"
-                let ativoFinal = data.ativo.split('] ').pop();
-                
-                ativo.innerText = ativoFinal;
-                sinal.innerText = data.sinal + " (" + data.assertividade + ")";
-                
-                if(data.sinal.includes("COMPRA")) {
-                    sinal.style.color = "#00ff6a";
-                } else if(data.sinal.includes("VENDA")) {
-                    sinal.style.color = "#ff4b4b";
-                } else {
-                    sinal.style.color = "white";
-                }
-
-            } catch (e) {
-                ativo.innerText = "ERRO DE CONEXÃO";
-                sinal.innerText = "VERIFIQUE O RENDER";
-            } finally {
-                btn.innerText = "ANALISAR MERCADO";
-                btn.disabled = false;
-            }
+        function analisar() {
+            const btn = document.querySelector('.btn');
+            btn.innerText = "IA ANALISANDO...";
+            
+            fetch('/analisar?estrategia=ZEUS') // Ajuste aqui conforme sua rota
+                .then(response => response.json())
+                .then(data => {
+                    const corClasse = data.sinal.includes("COMPRA") ? "buy" : "sell";
+                    document.getElementById('resultado').innerHTML = `
+                        <div class="status ${corClasse}">${data.ativo}</div>
+                        <div class="status ${corClasse}">${data.sinal}</div>
+                        <div style="font-size: 20px;">Assertividade: ${data.assertividade}</div>
+                        <div class="alerta">${data.alerta}</div>
+                    `;
+                    document.getElementById('cronometro_display').innerText = data.cronometro;
+                    btn.innerText = "ANALISAR MERCADO";
+                });
         }
+
+        // Cronômetro visual simples no navegador
+        setInterval(() => {
+            const agora = new Date();
+            const seg = agora.getSeconds();
+            const falta = 58 - seg > 0 ? 58 - seg : 60 - (seg - 58);
+            if (seg >= 55 && seg <= 59) {
+                document.getElementById('cronometro_display').innerHTML = "<b style='color:#0ecb81'>🚀 HORA DA VIRADA! ANALISE AGORA!</b>";
+            } else {
+                document.getElementById('cronometro_display').innerText = "⏳ Próxima virada em: " + (seg > 58 ? 58 + (60 - seg) : 58 - seg) + "s";
+            }
+        }, 1000);
     </script>
 </body>
 </html>
