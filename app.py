@@ -10,7 +10,7 @@ def index():
     # Carrega a página principal do seu bot
     return render_template('index.html')
 
-@app.route('/analisar')
+@app.route('/analizar')
 def analisar():
     # Pega a estratégia selecionada (WANDER ou ZEUS)
     estrategia = request.args.get('estrategia', 'ZEUS')
