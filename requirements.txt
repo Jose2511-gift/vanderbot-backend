@@ -4,4 +4,6 @@ yfinance
 pandas
 pandas-ta
 flask
+flask-cors
 gunicorn
+numpy
